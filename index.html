@@ -121,10 +121,47 @@
 
         // Questions Array (36 questions - Keeping your list)
         const questions = [
-            { question: "What does SQL stand for?", options: ["Structured Query Language", "Simple Query Language", "Standard Question Language", "System Query Language"], correct: "Structured Query Language" },
-            { question: "Which command is used to retrieve data?", options: ["GET", "SELECT", "FETCH", "OPEN"], correct: "SELECT" },
-            
+           { question: "What does SQL stand for?", options: ["Structured Query Language", "Simple Query Language", "Standard Question Language", "System Query Language"], correct: "Structured Query Language" },
+            { question: "Which command is used to retrieve data from a table?", options: ["GET", "SELECT", "FETCH", "OPEN"], correct: "SELECT" },
+            { question: "Which SQL command is used to create a database?", options: ["MAKE DATABASE", "CREATE DATABASE", "NEW DATABASE", "BUILD DATABASE"], correct: "CREATE DATABASE" },
+            { question: "What does RDBMS stand for?", options: ["Relational Database Management System", "Real Database Management System", "Remote Database Management System", "Relational Data Model System"], correct: "Relational Database Management System" },
+            { question: "Which command deletes a table permanently?", options: ["REMOVE TABLE", "DELETE TABLE", "DROP TABLE", "CLEAR TABLE"], correct: "DROP TABLE" },
+            { question: "Which clause is used to filter records?", options: ["FROM", "SELECT", "WHERE", "ORDER"], correct: "WHERE" },
+            { question: "What symbol is used to select all columns?", options: ["%", "#", "*", "&"], correct: "*" },
+            { question: "Which SQL command adds new data to a table?", options: ["ADD", "UPDATE", "INSERT", "APPEND"], correct: "INSERT" },
+            { question: "Which keyword removes duplicate records?", options: ["UNIQUE", "DISTINCT", "REMOVE", "FILTER"], correct: "DISTINCT" },
+            { question: "Which operator means NOT EQUAL in SQL?", options: ["=", "!=", "==", "<>="], correct: "!=" },
+            { question: "Which data type is used to store text?", options: ["INT", "FLOAT", "CHAR", "VARCHAR"], correct: "VARCHAR" },
+            { question: "What does the USE command do?", options: ["Creates a database", "Deletes a database", "Selects a database", "Updates a database"], correct: "Selects a database" },
+            { question: "Which command is used to modify an existing table?", options: ["CHANGE TABLE", "MODIFY TABLE", "ALTER TABLE", "UPDATE TABLE"], correct: "ALTER TABLE" },
+            { question: "What is a primary key?", options: ["A duplicate column", "A unique identifier", "A foreign key", "A nullable field"], correct: "A unique identifier" },
+            { question: "Which SQL clause sorts the result?", options: ["GROUP BY", "ORDER BY", "SORT BY", "ALIGN BY"], correct: "ORDER BY" },
+            { question: "Which command removes all records but keeps the table?", options: ["DROP", "DELETE", "TRUNCATE", "REMOVE"], correct: "TRUNCATE" },
+            { question: "What does IS NULL check?", options: ["Zero values", "Empty strings", "Missing values", "Duplicate values"], correct: "Missing values" },
+            { question: "Which SQL command updates existing data?", options: ["INSERT", "MODIFY", "UPDATE", "CHANGE"], correct: "UPDATE" },
+            { question: "Which company heavily used SQL in the early 1990s?", options: ["Google", "Oracle", "Facebook", "Tesla"], correct: "Oracle" },
+            { question: "Which SQL standard was released in 1992?", options: ["SQL-89", "SQL-90", "SQL-92", "SQL-94"], correct: "SQL-92" },
+            { question: "Which command is used to delete specific records?", options: ["DROP", "REMOVE", "DELETE", "TRUNCATE"], correct: "DELETE" },
+            { question: "Which clause groups rows with same values?", options: ["GROUP BY", "ORDER BY", "WHERE", "HAVING"], correct: "GROUP BY" },
+            { question: "Which keyword is used with GROUP BY to filter groups?", options: ["WHERE", "HAVING", "ORDER", "FILTER"], correct: "HAVING" },
+            { question: "Which SQL command creates a new table?", options: ["CREATE TABLE", "ADD TABLE", "NEW TABLE", "MAKE TABLE"], correct: "CREATE TABLE" },
+            { question: "Which constraint ensures no duplicate values?", options: ["PRIMARY KEY", "UNIQUE", "FOREIGN KEY", "CHECK"], correct: "UNIQUE" },
+            { question: "Which constraint allows NULL values?", options: ["NOT NULL", "PRIMARY KEY", "DEFAULT", "NULL"], correct: "NULL" },
+            { question: "Which command shows table structure?", options: ["DESCRIBE", "SHOW", "STRUCTURE", "DETAIL"], correct: "DESCRIBE" },
+            { question: "Which SQL command removes a database?", options: ["DELETE DATABASE", "DROP DATABASE", "REMOVE DATABASE", "CLEAR DATABASE"], correct: "DROP DATABASE" },
+            { question: "Which clause limits number of results?", options: ["LIMIT", "COUNT", "ROW", "MAX"], correct: "LIMIT" },
+            { question: "Which function counts rows?", options: ["SUM()", "COUNT()", "TOTAL()", "ADD()"], correct: "COUNT()" },
+            { question: "Which function returns highest value?", options: ["MAX()", "HIGH()", "TOP()", "UPPER()"], correct: "MAX()" },
+            { question: "Which function returns lowest value?", options: ["MIN()", "LOW()", "SMALL()", "DOWN()"], correct: "MIN()" },
+            { question: "Which join returns matching records?", options: ["INNER JOIN", "LEFT JOIN", "RIGHT JOIN", "FULL JOIN"], correct: "INNER JOIN" },
+            { question: "Which join returns all records from left table?", options: ["LEFT JOIN", "RIGHT JOIN", "INNER JOIN", "CROSS JOIN"], correct: "LEFT JOIN" },
+            { question: "Which join returns all records from right table?", options: ["LEFT JOIN", "RIGHT JOIN", "INNER JOIN", "FULL JOIN"], correct: "RIGHT JOIN" },
+            { question: "Which command is used to rename a column?", options: ["RENAME", "ALTER TABLE", "CHANGE", "UPDATE"], correct: "ALTER TABLE" }
+
+            // ... (Su'aalihii kale oo dhan halkan ku dar si la mid ah)
         ];
+            
+        
 
         let currentIdx = 0, score = 0, timer, timeLeft = 20, isExtraTime = false;
         let userData = JSON.parse(localStorage.getItem('quizard_user'));
