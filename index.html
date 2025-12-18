@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="so">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quizard Pro - SQL Challenge</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+    <style>
+        body { background: #0f172a; color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); }
+        .btn-cyan { background: #00d1ff; color: #1a1a40; transition: 0.3s; }
+        .btn-cyan:hover { background: #00b8e6; transform: scale(1.05); }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade { animation: fadeIn 0.8s ease-out forwards; }
+        
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-2px); } 75% { transform: translateX(2px); } }
+        .animate-shake { animation: shake 0.2s infinite; }
+        
+        .extra-time-glow { box-shadow: 0 0 15px #facc15; border-color: #facc15 !important; color: #facc15; }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div id="start-page" class="max-w-md w-full text-center space-y-8 animate-fade">
+        <div class="relative inline-block">
+            <div class="absolute -inset-1 bg-cyan-500 rounded-full blur opacity-30"></div>
+            <i class="fas fa-graduation-cap text-7xl text-cyan-400 relative"></i>
+        </div>
+        <div class="space-y-2">
+            <h1 class="text-6xl font-black italic tracking-tighter text-white">QUIZ<span class="text-cyan-400">ARD</span></h1>
+            <p class="text-cyan-400/80 font-mono tracking-widest text-xs uppercase">SQL Master Challenge</p>
+        </div>
+        <div class="glass p-6 rounded-3xl space-y-4 text-center">
+            <h3 class="font-bold text-lg text-cyan-400">💰 Shuruudaha Tartanka:</h3>
+            <ul class="text-sm text-gray-400 text-left space-y-2">
+                <li><i class="fas fa-check-circle text-cyan-400 mr-2"></i> Wada sax 36 su'aalood oo SQL ah.</li>
+                <li><i class="fas fa-clock text-cyan-400 mr-2"></i> 20s caadi ah + 10s Extra Time ah.</li>
+                <li><i class="fas fa-dollar-sign text-yellow-500 mr-2"></i> Markaad 100% keento waxaad helaysaa $1.</li>
+            </ul>
+        </div>
+        <button id="main-action-btn" onclick="handleStart()" class="btn-cyan w-full py-5 rounded-2xl font-black text-xl shadow-[0_0_20px_rgba(0,209,255,0.3)] group">
+            BILOW TARTANKA <i class="fas fa-bolt ml-2 group-hover:scale-125 transition-transform"></i>
+        </button>
+    </div>
+
+    <div id="login-screen" class="max-w-md w-full glass p-8 rounded-3xl text-center space-y-6 hidden animate-fade">
+        <h2 class="text-3xl font-bold italic">Xogta Diiwaangelinta</h2>
+        <div class="space-y-3">
+            <input type="text" id="username" placeholder="Magacaaga..." class="w-full p-4 rounded-xl bg-slate-800 border border-slate-700 focus:border-cyan-400 text-white outline-none">
+            <input type="email" id="user-email" placeholder="Gmail-kaaga..." class="w-full p-4 rounded-xl bg-slate-800 border border-slate-700 focus:border-cyan-400 text-white outline-none">
+            <input type="tel" id="user-phone" placeholder="Lambarka Telefoonka..." class="w-full p-4 rounded-xl bg-slate-800 border border-slate-700 focus:border-cyan-400 text-white outline-none">
+            
+            <select id="user-major" class="w-full p-4 rounded-xl bg-slate-800 border border-slate-700 focus:border-cyan-400 text-white outline-none appearance-none">
+                <option value="" disabled selected>Dooro Kulliyadda...</option>
+                <option value="Software Engineering">Software Engineering</option>
+                <option value="Computer Science">Computer Science</option>
+            </select>
+        </div>
+        <button onclick="registerUser()" class="btn-cyan w-full py-4 rounded-xl font-bold text-lg uppercase">Diiwaangeli & Bilow</button>
+    </div>
+
+    <div id="quiz-screen" class="max-w-md w-full hidden space-y-4 animate-fade">
+        <div class="flex justify-between items-center px-2">
+            <div class="font-bold text-cyan-400 text-xs uppercase italic">👤 <span id="p-name"></span></div>
+            <div id="timer-box" class="bg-slate-800 border border-slate-700 px-5 py-2 rounded-full flex items-center gap-2 transition-all duration-300">
+                <i id="timer-icon" class="far fa-clock text-cyan-400"></i>
+                <span id="timer-display" class="font-black text-lg">20s</span>
+            </div>
+        </div>
+        <div class="glass p-6 rounded-3xl min-h-[380px] flex flex-col justify-between relative shadow-2xl">
+            <div id="extra-time-badge" class="hidden absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-500 text-slate-900 px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest animate-bounce">Extra Time!</div>
+            <div>
+                <div class="flex justify-between text-[10px] text-gray-500 mb-4 uppercase font-bold">
+                    <span id="p-major" class="text-cyan-400"></span>
+                    <span id="q-count">Q: 1/36</span>
+                </div>
+                <h2 id="question-text" class="text-xl font-bold leading-tight italic"></h2>
+            </div>
+            <div id="options-container" class="space-y-3 mt-6"></div>
+        </div>
+        <button id="next-btn" onclick="nextQuestion()" class="hidden w-full py-4 bg-white text-blue-900 rounded-xl font-black uppercase animate-bounce">Next Question</button>
+    </div>
+
+    <div id="result-screen" class="max-w-md w-full hidden text-center space-y-6 animate-fade">
+        <div id="result-emoji" class="text-9xl"></div>
+        <h2 id="result-status" class="text-3xl font-black uppercase"></h2>
+        <div class="glass p-8 rounded-3xl shadow-2xl">
+            <div id="final-percent" class="text-7xl font-black text-cyan-400">0%</div>
+            <div id="congrats-box" class="hidden mt-6 p-4 bg-yellow-500/20 border border-yellow-500 rounded-2xl animate-pulse">
+                <p class="text-yellow-400 font-bold text-sm">🎉 HAMBALYO! $1.00 ayaad ku guuleysatay!</p>
+            </div>
+        </div>
+        <button onclick="location.reload()" class="btn-cyan w-full py-4 rounded-xl font-bold uppercase">Xir Quiz-ka</button>
+    </div>
+
+    <script>
+        // --- FIREBASE (Same Config) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCYj6-op2VW6nl6l1vC1cb4Lb1JlbrogBc",
+            authDomain: "quizardapp-8a525.firebaseapp.com",
+            databaseURL: "https://quizardapp-8a525-default-rtdb.firebaseio.com",
+            projectId: "quizardapp-8a525",
+            storageBucket: "quizardapp-8a525.firebasestorage.app",
+            messagingSenderId: "282563138920",
+            appId: "1:282563138920:web:8760504c35ce67bac432dd"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        const sndCorrect = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
+        const sndWrong = new Audio('https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3');
+        const sndClick = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
+        const sndWin = new Audio('https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3');
+        const sndAlert = new Audio('https://assets.mixkit.co/active_storage/sfx/1103/1103-preview.mp3');
+
+        // Questions Array (36 questions - Keeping your list)
+        const questions = [
+            { question: "What does SQL stand for?", options: ["Structured Query Language", "Simple Query Language", "Standard Question Language", "System Query Language"], correct: "Structured Query Language" },
+            { question: "Which command is used to retrieve data?", options: ["GET", "SELECT", "FETCH", "OPEN"], correct: "SELECT" },
+            
+        ];
+
+        let currentIdx = 0, score = 0, timer, timeLeft = 20, isExtraTime = false;
+        let userData = JSON.parse(localStorage.getItem('quizard_user'));
+
+        function handleStart() {
+            sndClick.play();
+            if(userData) startQuiz();
+            else {
+                document.getElementById('start-page').classList.add('hidden');
+                document.getElementById('login-screen').classList.remove('hidden');
+            }
+        }
+
+        function registerUser() {
+            const name = document.getElementById('username').value;
+            const email = document.getElementById('user-email').value;
+            const phone = document.getElementById('user-phone').value;
+            const major = document.getElementById('user-major').value;
+            if(!name || !email || !phone || !major) return alert("Fadlan buuxi dhamaan meelaha banaan!");
+            userData = { name, email, phone, major, registeredAt: new Date().toISOString() };
+            localStorage.setItem('quizard_user', JSON.stringify(userData));
+            startQuiz();
+        }
+
+        function startQuiz() {
+            document.getElementById('start-page').classList.add('hidden');
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            document.getElementById('p-name').innerText = userData.name;
+            document.getElementById('p-major').innerText = userData.major;
+            showQuestion();
+        }
+
+        function showQuestion() {
+            if(currentIdx >= questions.length) return finishQuiz();
+            clearInterval(timer);
+            timeLeft = 20;
+            isExtraTime = false;
+            resetTimerUI();
+            startTimer();
+            
+            const q = questions[currentIdx];
+            document.getElementById('q-count').innerText = `Q: ${currentIdx + 1}/${questions.length}`;
+            document.getElementById('question-text').innerText = q.question;
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            document.getElementById('next-btn').classList.add('hidden');
+            
+            q.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "w-full p-4 rounded-xl text-left text-sm bg-slate-800 border border-slate-700 hover:border-cyan-400 transition-all font-medium";
+                btn.innerText = opt;
+                btn.onclick = () => checkAns(btn, opt);
+                container.appendChild(btn);
+            });
+        }
+
+        function startTimer() {
+            timer = setInterval(() => {
+                timeLeft--;
+                updateTimerUI();
+                
+                if(!isExtraTime && timeLeft <= 0) {
+                    activateExtraTime();
+                } else if(isExtraTime && timeLeft <= 0) {
+                    clearInterval(timer);
+                    checkAns(null, null); // Time up after extra time
+                }
+            }, 1000);
+        }
+
+        function activateExtraTime() {
+            isExtraTime = true;
+            timeLeft = 10;
+            sndAlert.play();
+            document.getElementById('timer-box').classList.add('extra-time-glow', 'animate-shake');
+            document.getElementById('timer-icon').className = "fas fa-bolt text-yellow-400";
+            document.getElementById('extra-time-badge').classList.remove('hidden');
+        }
+
+        function resetTimerUI() {
+            document.getElementById('timer-box').classList.remove('extra-time-glow', 'animate-shake', 'text-red-500', 'border-red-500');
+            document.getElementById('timer-icon').className = "far fa-clock text-cyan-400";
+            document.getElementById('extra-time-badge').classList.add('hidden');
+            updateTimerUI();
+        }
+
+        function updateTimerUI() {
+            document.getElementById('timer-display').innerText = `${timeLeft}s`;
+            if(!isExtraTime && timeLeft <= 5) {
+                document.getElementById('timer-box').classList.add('text-red-500', 'border-red-500');
+            }
+        }
+
+        function checkAns(btn, selected) {
+            clearInterval(timer);
+            const correct = questions[currentIdx].correct;
+            const btns = document.querySelectorAll('#options-container button');
+            btns.forEach(b => b.disabled = true);
+            
+            if(selected === correct) {
+                if(btn) btn.classList.add('bg-green-600/20', 'border-green-500', 'text-green-400');
+                sndCorrect.play();
+                score++;
+            } else {
+                if(btn) btn.classList.add('bg-red-600/20', 'border-red-500', 'text-red-400');
+                sndWrong.play();
+                btns.forEach(b => { if(b.innerText === correct) b.classList.add('bg-green-600/20', 'border-green-500', 'text-green-400'); });
+            }
+            document.getElementById('next-btn').classList.remove('hidden');
+        }
+
+        function nextQuestion() { sndClick.play(); currentIdx++; showQuestion(); }
+
+        function finishQuiz() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            const percent = Math.round((score/questions.length)*100);
+            
+            database.ref('results').push({ ...userData, score, total: questions.length, percent, date: new Date().toLocaleString() });
+
+            document.getElementById('final-percent').innerText = `${percent}%`;
+            if(percent === 100) { 
+                sndWin.play(); 
+                document.getElementById('result-emoji').innerText = "💰"; 
+                document.getElementById('result-status').innerText = "MAASHAA ALLAAH!";
+                document.getElementById('congrats-box').classList.remove('hidden'); 
+            } else { 
+                document.getElementById('result-emoji').innerText = "📚"; 
+                document.getElementById('result-status').innerText = "Dadaal dheeraad ah!";
+            }
+        }
+    </script>
+</body>
+</html>

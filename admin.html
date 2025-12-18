@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="so">
+<head>
+    <meta charset="UTF-8">
+    <title>Quizard Admin - Analytics Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+</head>
+<body class="bg-[#0b0f1a] text-white p-4 md:p-10">
+    <div class="max-w-7xl mx-auto space-y-8">
+        
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4 border-b border-slate-800 pb-6">
+            <div>
+                <h1 class="text-4xl font-black text-cyan-400 italic flex items-center gap-3">
+                    <i class="fas fa-shield-halved text-3xl"></i> Dashboard Pro
+                </h1>
+                <p class="text-gray-500 text-sm font-mono uppercase tracking-widest">Advanced SQL Challenge Analytics</p>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="exportToExcel()" class="bg-green-600 hover:bg-green-700 px-6 py-2.5 rounded-xl text-sm font-bold transition flex items-center gap-2 shadow-lg">
+                    <i class="fas fa-download"></i> Dhoofiso Excel
+                </button>
+                <button onclick="clearAllData()" class="bg-red-900/30 hover:bg-red-600 text-red-500 hover:text-white border border-red-600/50 px-5 py-2 rounded-xl text-sm font-bold transition">
+                    <i class="fas fa-trash-alt"></i> Masax Database
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="bg-slate-900/50 p-6 rounded-3xl border border-slate-800 text-center">
+                <h3 class="text-cyan-400 font-bold mb-4 flex items-center justify-center gap-2">
+                    <i class="fas fa-code text-xs"></i> Software Eng.
+                </h3>
+                <div class="h-40 flex items-center justify-center">
+                    <canvas id="seChart"></canvas>
+                </div>
+                <p id="seStats" class="mt-4 text-[10px] text-gray-500 uppercase font-bold"></p>
+            </div>
+
+            <div class="bg-slate-900/50 p-6 rounded-3xl border border-slate-800 text-center">
+                <h3 class="text-purple-400 font-bold mb-4 flex items-center justify-center gap-2">
+                    <i class="fas fa-microchip text-xs"></i> Computer Science
+                </h3>
+                <div class="h-40 flex items-center justify-center">
+                    <canvas id="csChart"></canvas>
+                </div>
+                <p id="csStats" class="mt-4 text-[10px] text-gray-500 uppercase font-bold"></p>
+            </div>
+
+            <div class="grid grid-rows-2 gap-4">
+                <div class="bg-gradient-to-br from-cyan-900/20 to-slate-900 p-6 rounded-3xl border border-cyan-500/20 flex flex-col justify-center items-center">
+                    <p class="text-gray-400 text-xs font-bold uppercase tracking-tighter">Total Students</p>
+                    <h2 id="total-users" class="text-5xl font-black text-white">0</h2>
+                </div>
+                <div class="bg-gradient-to-br from-yellow-900/20 to-slate-900 p-6 rounded-3xl border border-yellow-500/20 flex flex-col justify-center items-center">
+                    <p class="text-yellow-500 text-xs font-bold uppercase tracking-tighter">Winners ($1)</p>
+                    <h2 id="winner-count" class="text-5xl font-black text-yellow-500">0</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <div class="flex flex-col md:flex-row gap-4">
+                <div class="relative flex-1">
+                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                    <input type="text" id="adminSearch" onkeyup="searchTable()" placeholder="Raadi tartame (Magac, Gmail, ama Major)..." class="w-full bg-slate-900 border border-slate-800 p-4 pl-12 rounded-2xl focus:outline-none focus:border-cyan-400 transition text-sm">
+                </div>
+            </div>
+
+            <div class="bg-slate-900/40 rounded-3xl overflow-hidden shadow-2xl border border-slate-800">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left" id="dataTable">
+                        <thead class="bg-slate-900/80 text-gray-500 text-[10px] uppercase tracking-widest">
+                            <tr>
+                                <th class="p-5">Information & Phone</th>
+                                <th class="p-5">Major</th>
+                                <th class="p-5 text-center">Score %</th>
+                                <th class="p-5">Date & Time</th>
+                                <th class="p-5 text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-table" class="divide-y divide-slate-800/50"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCYj6-op2VW6nl6l1vC1cb4Lb1JlbrogBc",
+            authDomain: "quizardapp-8a525.firebaseapp.com",
+            databaseURL: "https://quizardapp-8a525-default-rtdb.firebaseio.com",
+            projectId: "quizardapp-8a525",
+            storageBucket: "quizardapp-8a525.firebasestorage.app",
+            messagingSenderId: "282563138920",
+            appId: "1:282563138920:web:8760504c35ce67bac432dd"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const dbRef = firebase.database().ref('results');
+        
+        let seChart = null, csChart = null;
+        let allResults = [];
+
+        dbRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            allResults = [];
+            if (data) {
+                for (let id in data) allResults.push({ id, ...data[id] });
+            }
+            displayData(allResults);
+        });
+
+        function displayData(data) {
+            const table = document.getElementById('admin-table');
+            table.innerHTML = '';
+            
+            let sePass = 0, seFail = 0, csPass = 0, csFail = 0, winners = 0;
+
+            data.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            data.forEach((item) => {
+                const percent = item.percent || 0;
+                const major = item.major || "Unknown";
+                
+                // Analytics Logic
+                if(major === "Software Engineering") {
+                    if(percent >= 80) sePass++; else seFail++;
+                } else {
+                    if(percent >= 80) csPass++; else csFail++;
+                }
+                if (percent === 100) winners++;
+
+                const winnerBadge = percent === 100 ? `<span class="block text-[10px] text-yellow-400 font-bold mt-1"><i class="fas fa-money-bill-wave mr-1"></i> WIN WIN: ${item.phone || 'No Phone'}</span>` : `<span class="block text-[10px] text-gray-500 mt-1">${item.phone || 'N/A'}</span>`;
+
+                table.innerHTML += `
+                    <tr class="hover:bg-slate-800/30 transition border-l-4 ${major === 'Software Engineering' ? 'border-cyan-500' : 'border-purple-500'}">
+                        <td class="p-5">
+                            <div class="font-bold text-gray-200">${item.name || "Unknown"}</div>
+                            <div class="text-[11px] text-gray-500 font-mono">${item.email || ""}</div>
+                            ${winnerBadge}
+                        </td>
+                        <td class="p-5">
+                            <span class="text-[10px] px-2 py-1 rounded-full border ${major === 'Software Engineering' ? 'border-cyan-500/30 text-cyan-400' : 'border-purple-500/30 text-purple-400'} font-bold">
+                                ${major}
+                            </span>
+                        </td>
+                        <td class="p-5 text-center">
+                            <div class="text-xl font-black ${percent >= 80 ? 'text-green-400' : 'text-red-400'}">${percent}%</div>
+                            <div class="text-[9px] text-gray-600">${item.score}/${item.total} Correct</div>
+                        </td>
+                        <td class="p-5 text-[10px] text-gray-500 font-mono">${item.date || "N/A"}</td>
+                        <td class="p-5 text-center">
+                            <button onclick="deleteUser('${item.id}')" class="text-slate-700 hover:text-red-500 transition">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+            });
+
+            document.getElementById('total-users').innerText = data.length;
+            document.getElementById('winner-count').innerText = winners;
+            
+            updateIndividualChart('seChart', sePass, seFail, '#06b6d4', seChart, (c) => seChart = c);
+            updateIndividualChart('csChart', csPass, csFail, '#a855f7', csChart, (c) => csChart = c);
+            
+            document.getElementById('seStats').innerText = `Pass: ${sePass} | Fail: ${seFail}`;
+            document.getElementById('csStats').innerText = `Pass: ${csPass} | Fail: ${csFail}`;
+        }
+
+        function updateIndividualChart(canvasId, pass, fail, color, chartVar, setChartVar) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            if (chartVar) chartVar.destroy();
+            const newChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Passed', 'Failed'],
+                    datasets: [{
+                        data: [pass, fail],
+                        backgroundColor: [color, '#1e293b'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { 
+                    plugins: { legend: { display: false } },
+                    maintainAspectRatio: false,
+                    cutout: '80%'
+                }
+            });
+            setChartVar(newChart);
+        }
+
+        function searchTable() {
+            let input = document.getElementById("adminSearch").value.toUpperCase();
+            let tr = document.getElementById("admin-table").getElementsByTagName("tr");
+            for (let i = 0; i < tr.length; i++) {
+                let text = tr[i].innerText.toUpperCase();
+                tr[i].style.display = text.indexOf(input) > -1 ? "" : "none";
+            }
+        }
+
+        function deleteUser(id) {
+            if (confirm("Ma hubtaa?")) firebase.database().ref('results/' + id).remove();
+        }
+
+        function clearAllData() {
+            if (confirm("DIGNIIN: Dhamaan xogta waa la tirtirayaa!")) firebase.database().ref('results').remove();
+        }
+
+        function exportToExcel() {
+            const ws = XLSX.utils.json_to_sheet(allResults);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Results");
+            XLSX.writeFile(wb, "Quizard_Full_Report.xlsx");
+        }
+    </script>
+</body>
+</html>
